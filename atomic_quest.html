@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Atomic Quest — 化学結合の探求</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#0d1117;--navy:#161b27;--card:#1c2333;--card2:#222d3f;
+  --gold:#f0a500;--gold2:#ffc843;--gold3:#fff0b3;
+  --teal:#1ab87a;--teal2:#0d9e65;
+  --blue:#3d8ef0;--blue2:#1a6fd4;
+  --ember:#e8603a;--ember2:#c4441e;
+  --purple:#8b7cf8;--purple2:#6c5ce7;
+  --pink:#e84393;--fog:#8b96a8;--fog2:#5a6680;
+  --cream:#f5edd6;--white:#ffffff;
+  --xpg:#22c55e;--star:#fbbf24;
+  --border:rgba(255,255,255,0.08);
+  --border2:rgba(255,255,255,0.14);
+}
+html,body{height:100%;overflow:hidden;background:var(--ink);color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+
+/* ─── SCREENS ─── */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
+
+/* ─── TOPBAR ─── */
+.topbar{background:var(--navy);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0;min-height:50px}
+.topbar-l{display:flex;align-items:center;gap:10px}
+.app-logo{width:28px;height:28px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.page-ttl{font-size:15px;font-weight:600}
+.back-btn{width:34px;height:34px;background:var(--card);border:1px solid var(--border2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;flex-shrink:0;transition:background .15s}
+.back-btn:active{background:var(--card2)}
+.xp-pill{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#4ade80;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px}
+
+/* ─── SCROLL ─── */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 24px}
+
+/* ─── MAP SCREEN ─── */
+.hero{text-align:center;padding:20px 0 14px}
+.hero-orb{width:72px;height:72px;border-radius:50%;background:var(--card);border:2px solid var(--gold);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:34px}
+.hero h1{font-size:20px;font-weight:700;color:var(--gold);margin-bottom:5px}
+.hero p{font-size:13px;color:var(--fog);line-height:1.5}
+
+.lv-card{background:var(--navy);border:1px solid rgba(240,165,0,.2);border-radius:14px;padding:13px 15px;margin-bottom:14px}
+.lv-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.lv-name{font-size:13px;color:var(--fog)}
+.lv-title{font-size:14px;font-weight:600;color:var(--gold)}
+.xp-track{height:7px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin-bottom:4px}
+.xp-fill{height:100%;background:var(--teal);border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.xp-sub{font-size:11px;color:var(--fog);text-align:right}
+
+.section-label{font-size:11px;font-weight:600;color:var(--fog);text-transform:uppercase;letter-spacing:1px;margin:16px 0 8px}
+
+.planet-list{display:flex;flex-direction:column;gap:10px}
+.p-card{background:var(--card);border-radius:14px;padding:13px;border:1.5px solid var(--border);cursor:pointer;display:flex;gap:12px;align-items:center;position:relative;transition:border-color .2s,transform .12s}
+.p-card:active{transform:scale(.97)}
+.p-card.done{border-color:rgba(240,165,0,.35)}
+.p-card.locked{opacity:.38;cursor:not-allowed}
+.p-orb{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.p-info{flex:1;min-width:0}
+.p-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.p-sub{font-size:11px;color:var(--fog);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-stars{font-size:13px;letter-spacing:1px}
+.p-badge{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px}
+.badge-new{background:rgba(232,96,58,.18);color:#ff7a5c;border:1px solid rgba(232,96,58,.35)}
+.badge-done{background:rgba(26,184,122,.15);color:#4ade80;border:1px solid rgba(26,184,122,.3)}
+.badge-lock{background:rgba(255,255,255,.07);color:var(--fog)}
+
+/* ─── PLANET SCREEN ─── */
+.s-hdr{background:var(--navy);border-radius:14px;padding:14px;text-align:center;margin-bottom:13px}
+.s-hdr h2{font-size:17px;font-weight:700;color:var(--gold);margin-bottom:3px}
+.s-hdr p{font-size:12px;color:var(--fog)}
+
+.stage-nav{display:flex;gap:6px;margin-bottom:13px}
+.s-tab{flex:1;padding:9px 4px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--fog);font-size:11px;font-weight:500;cursor:pointer;text-align:center;transition:all .2s}
+.s-tab.active{background:var(--gold);color:#0d1117;border-color:var(--gold);font-weight:700}
+.s-tab.done{border-color:var(--teal);color:#4ade80}
+
+/* ─── SIM ─── */
+.sim-wrap{background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid var(--border)}
+.sim-lbl{font-size:11px;font-weight:600;color:var(--fog);letter-spacing:.5px;margin-bottom:10px;text-align:center}
+.sim-stage{width:100%;height:210px;border-radius:10px;background:rgba(0,0,0,.35);position:relative;overflow:hidden;touch-action:none;border:1px solid var(--border)}
+.sim-msg{font-size:12px;color:#a7f3d0;line-height:1.5;margin-top:10px;padding:9px 11px;background:rgba(26,184,122,.12);border:1px solid rgba(26,184,122,.25);border-radius:10px;display:none}
+.sim-msg.show{display:block}
+
+/* atoms */
+.atom{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:grab;user-select:none;border:2px solid rgba(255,255,255,.25);transition:box-shadow .25s}
+.atom:active{cursor:grabbing;z-index:10}
+.atom.glow{box-shadow:0 0 0 3px var(--teal),0 0 18px rgba(26,184,122,.45)}
+.atom.glow-gold{box-shadow:0 0 0 3px var(--gold),0 0 18px rgba(240,165,0,.4)}
+.atom-Na{background:#2563eb;color:#fff;width:48px;height:48px}
+.atom-Cl{background:#dc2626;color:#fff;width:44px;height:44px}
+.atom-H{background:#65a30d;color:#fff;width:36px;height:36px;font-size:11px}
+.atom-O{background:#db2777;color:#fff;width:46px;height:46px}
+.atom-C{background:#d97706;color:#fff;width:46px;height:46px}
+.atom-Fe{background:#b45309;color:#fff;width:50px;height:50px}
+.atom-Cu{background:#92400e;color:#fff;width:50px;height:50px}
+.elec{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--gold2);pointer-events:none}
+.hint-txt{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--fog);white-space:nowrap;pointer-events:none}
+.bond{position:absolute;height:3px;border-radius:2px;background:var(--teal);transform-origin:left center;pointer-events:none}
+.bond2{background:var(--gold2)}
+.bond3{background:var(--purple)}
+
+/* ─── EXPLORE CARDS ─── */
+.exp-card{background:var(--card);border-radius:12px;padding:13px;margin-bottom:9px;border-left:3px solid var(--purple);cursor:pointer;transition:background .15s}
+.exp-card:active{background:var(--card2)}
+.exp-head{display:flex;align-items:center;gap:10px;margin-bottom:0}
+.exp-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.exp-title{font-size:13px;font-weight:600;color:var(--cream)}
+.exp-hint{font-size:10px;color:var(--fog);margin-top:1px}
+.exp-body{font-size:12px;color:#94a3b8;line-height:1.65;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:none}
+.exp-body.open{display:block}
+.formula-box{background:var(--navy);border-radius:10px;padding:12px;text-align:center;margin:10px 0;border:1px solid rgba(240,165,0,.2)}
+.formula-big{font-size:20px;font-weight:700;color:var(--gold);margin-bottom:4px}
+.formula-sub{font-size:11px;color:var(--fog)}
+
+/* ─── QUIZ ─── */
+.quiz-card{background:var(--card);border-radius:14px;padding:15px;margin-bottom:10px;border:1px solid var(--border)}
+.quiz-q{font-size:14px;line-height:1.65;margin-bottom:13px;color:var(--cream);font-weight:500}
+.quiz-opts{display:flex;flex-direction:column;gap:7px}
+.opt{padding:11px 13px;border-radius:10px;border:1px solid var(--border2);background:rgba(255,255,255,.03);color:var(--white);font-size:13px;cursor:pointer;text-align:left;width:100%;transition:all .18s}
+.opt:active:not(.disabled){transform:scale(.98)}
+.opt.correct{background:rgba(26,184,122,.18);border-color:#4ade80;color:#4ade80}
+.opt.wrong{background:rgba(232,96,58,.14);border-color:#ff7a5c;color:#ff7a5c}
+.opt.disabled{pointer-events:none}
+.quiz-exp{font-size:12px;color:#94a3b8;line-height:1.6;margin-top:9px;padding-top:9px;border-top:1px solid var(--border);display:none}
+.quiz-exp.show{display:block}
+.quiz-score{font-size:12px;color:var(--fog);text-align:right;margin-bottom:8px}
+
+/* ─── RESULT ─── */
+.result{text-align:center;padding:20px 10px 10px}
+.result-icon{font-size:54px;margin-bottom:10px}
+.result-title{font-size:20px;font-weight:700;color:var(--gold);margin-bottom:5px}
+.result-sub{font-size:13px;color:var(--fog);margin-bottom:16px}
+.xp-num{font-size:34px;font-weight:700;color:var(--xpg);margin-bottom:2px}
+.xp-lbl{font-size:12px;color:var(--fog);margin-bottom:14px}
+.stars-big{font-size:34px;letter-spacing:4px;margin-bottom:16px;color:var(--star)}
+
+/* ─── CODEX SCREEN ─── */
+.codex-card{background:var(--card);border-radius:12px;padding:13px;margin-bottom:9px;display:flex;gap:11px;align-items:flex-start;border:1px solid var(--border)}
+.codex-card.locked{opacity:.3}
+.codex-avatar{width:44px;height:44px;border-radius:10px;background:rgba(139,124,248,.2);border:1px solid rgba(139,124,248,.35);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.codex-name{font-size:13px;font-weight:600;color:var(--gold);margin-bottom:1px}
+.codex-year{font-size:10px;color:var(--fog);margin-bottom:5px}
+.codex-desc{font-size:11px;color:#94a3b8;line-height:1.55}
+
+/* ─── DASHBOARD ─── */
+.dash-card{background:var(--card);border-radius:12px;padding:13px;margin-bottom:9px;border:1px solid var(--border)}
+.dash-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.dash-name{font-size:13px;font-weight:500}
+.dash-xp{font-size:12px;color:var(--gold);font-weight:600}
+.mini-bar{height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.mini-fill{height:100%;background:var(--teal);border-radius:3px}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:14px}
+.stat-box{background:var(--card);border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border)}
+.stat-num{font-size:22px;font-weight:700;color:var(--gold)}
+.stat-lbl{font-size:11px;color:var(--fog);margin-top:2px}
+
+/* ─── BOTTOM NAV ─── */
+.bottom-nav{background:var(--navy);border-top:1px solid var(--border);display:flex;flex-shrink:0}
+.nav-btn{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:color .15s;color:var(--fog);font-size:10px;border:none;background:transparent}
+.nav-btn.active{color:var(--gold)}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.8;fill:none}
+
+/* ─── BUTTONS ─── */
+.btn-p{width:100%;padding:13px;background:var(--gold);color:#0d1117;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:transform .12s,opacity .15s;margin-top:4px}
+.btn-p:active{transform:scale(.97);opacity:.85}
+.btn-s{width:100%;padding:11px;background:rgba(255,255,255,.06);color:var(--white);border:1px solid var(--border2);border-radius:12px;font-size:13px;cursor:pointer;margin-top:7px;transition:background .15s}
+.btn-s:active{background:rgba(255,255,255,.12)}
+.btn-sm{padding:8px 14px;background:rgba(255,255,255,.06);color:var(--white);border:1px solid var(--border2);border-radius:9px;font-size:12px;cursor:pointer}
+.btn-sm:active{background:rgba(255,255,255,.12)}
+
+/* ─── TOAST ─── */
+.toast{position:absolute;bottom:75px;left:50%;transform:translateX(-50%) translateY(14px);background:rgba(26,184,122,.92);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;pointer-events:none;opacity:0;transition:all .3s;z-index:999;white-space:nowrap;max-width:280px;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ─── FLASH ─── */
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rush{from{transform:translateX(0)}to{transform:translateX(180px)}}
+@keyframes zap{0%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(.9)}}
+@keyframes ripple{0%{transform:scale(.3);opacity:.8}100%{transform:scale(2.5);opacity:0}}
+.anim-pop{animation:pop .35s ease both}
+.anim-float{animation:float 2.8s ease-in-out infinite}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ MAP SCREEN ══════════════ -->
+<div id="s-map" class="screen active">
+  <div class="topbar">
+    <div class="topbar-l">
+      <div class="app-logo">⚛</div>
+      <span class="page-ttl">Atomic Quest</span>
+    </div>
+    <span class="xp-pill" id="g-xp">0 XP</span>
+  </div>
+  <div class="scroll">
+    <div class="hero">
+      <div class="hero-orb anim-float">🌌</div>
+      <h1>化学結合の宇宙へ</h1>
+      <p>惑星を制覇して<br>化学の賢者を目指せ</p>
+    </div>
+    <div class="lv-card">
+      <div class="lv-row">
+        <span class="lv-name">現在のレベル</span>
+        <span class="lv-title" id="lv-title">Lv.1 原子見習い</span>
+      </div>
+      <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+      <div class="xp-sub" id="xp-sub">0 / 150 XP</div>
+    </div>
+    <div class="section-label">惑星マップ</div>
+    <div class="planet-list" id="planet-list"></div>
+  </div>
+  <div class="bottom-nav" id="nav-map">
+    <button class="nav-btn active" onclick="navTo('map')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M2 12h20M12 2c-2.5 3-4 6.5-4 10s1.5 7 4 10"/></svg>
+      マップ
+    </button>
+    <button class="nav-btn" onclick="navTo('codex')">
+      <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h5"/></svg>
+      図鑑
+    </button>
+    <button class="nav-btn" onclick="navTo('dash')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      記録
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════ PLANET SCREEN ══════════════ -->
+<div id="s-planet" class="screen">
+  <div class="topbar">
+    <div class="topbar-l">
+      <button class="back-btn" onclick="goMap()">←</button>
+      <span class="page-ttl" id="p-title"></span>
+    </div>
+    <span class="xp-pill" id="p-xp"></span>
+  </div>
+  <div class="scroll" id="p-content"></div>
+</div>
+
+<!-- ══════════════ CODEX SCREEN ══════════════ -->
+<div id="s-codex" class="screen">
+  <div class="topbar">
+    <div class="topbar-l">
+      <div class="app-logo">📖</div>
+      <span class="page-ttl">発見者図鑑</span>
+    </div>
+    <span class="xp-pill" id="codex-xp">0 XP</span>
+  </div>
+  <div class="scroll" id="codex-content"></div>
+  <div class="bottom-nav">
+    <button class="nav-btn" onclick="navTo('map')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M2 12h20M12 2c-2.5 3-4 6.5-4 10s1.5 7 4 10"/></svg>
+      マップ
+    </button>
+    <button class="nav-btn active" onclick="navTo('codex')">
+      <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h5"/></svg>
+      図鑑
+    </button>
+    <button class="nav-btn" onclick="navTo('dash')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      記録
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════ DASHBOARD SCREEN ══════════════ -->
+<div id="s-dash" class="screen">
+  <div class="topbar">
+    <div class="topbar-l">
+      <div class="app-logo">📊</div>
+      <span class="page-ttl">学習記録</span>
+    </div>
+    <span class="xp-pill" id="dash-xp">0 XP</span>
+  </div>
+  <div class="scroll" id="dash-content"></div>
+  <div class="bottom-nav">
+    <button class="nav-btn" onclick="navTo('map')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M2 12h20M12 2c-2.5 3-4 6.5-4 10s1.5 7 4 10"/></svg>
+      マップ
+    </button>
+    <button class="nav-btn" onclick="navTo('codex')">
+      <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h5"/></svg>
+      図鑑
+    </button>
+    <button class="nav-btn active" onclick="navTo('dash')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      記録
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+const ST = {
+  xp: 0, level: 0, streak: 0,
+  planets: {}
+};
+const PLANET_IDS = ['ion','covalent','metal','molecular','crystal','polymer'];
+PLANET_IDS.forEach(id => {
+  ST.planets[id] = {stars:0, s1:false, s2:false, s3:false, score:0};
+});
+
+const LEVELS = [
+  {xp:0,   title:'Lv.1 原子見習い'},
+  {xp:150, title:'Lv.2 分子の探索者'},
+  {xp:350, title:'Lv.3 結合の理解者'},
+  {xp:600, title:'Lv.4 化学の賢者'},
+  {xp:900, title:'Lv.5 量子の使い手'},
+  {xp:1300,title:'Lv.MAX 結合の神'},
+];
+
+const PLANETS = [
+  {id:'ion',    name:'イオン結合',   sub:'電子を渡す者・受け取る者',   orb:'🔵', col:'#2563eb', locked:false},
+  {id:'covalent',name:'共有結合',    sub:'電子を分かち合う絆',          orb:'🌸', col:'#db2777', locked:false},
+  {id:'metal',  name:'金属結合',     sub:'自由電子の海の謎',            orb:'⚡', col:'#d97706', locked:false},
+  {id:'molecular',name:'分子の形',   sub:'形が性質を決める',            orb:'💠', col:'#7c3aed', locked:false},
+  {id:'crystal', name:'結晶の世界',  sub:'4種類の結晶を制覇せよ',       orb:'💎', col:'#0891b2', locked:false},
+  {id:'polymer', name:'高分子',      sub:'繰り返しが生む巨大分子',      orb:'🧬', col:'#16a34a', locked:false},
+];
+
+const SCIENTISTS = [
+  {id:'lavoisier', name:'ラヴォワジェ', year:'1789', icon:'⚗',
+   desc:'質量保存の法則を確立し、元素の概念を近代化した。フランス革命で処刑された悲劇の天才。',
+   planet:'ion'},
+  {id:'dalton', name:'ドルトン', year:'1803', icon:'⚛',
+   desc:'原子論を確立。「同じ元素の原子は同じ質量を持つ」という仮説で化学を革命した。',
+   planet:'ion'},
+  {id:'avogadro', name:'アヴォガドロ', year:'1811', icon:'🔢',
+   desc:'分子の概念を提唱。50年間ほぼ無視された孤独な先駆者。6.02×10²³は今も彼の名を冠する。',
+   planet:'covalent'},
+  {id:'lewis', name:'ルイス', year:'1916', icon:'💡',
+   desc:'共有電子対理論とオクテット則を確立。電子の視点から化学結合の本質を初めて解明した。',
+   planet:'covalent'},
+  {id:'pauling', name:'ポーリング', year:'1930s', icon:'⚡',
+   desc:'電気陰性度・混成軌道・共鳴理論を確立。ノーベル賞を2度受賞した20世紀最大の化学者。',
+   planet:'molecular'},
+  {id:'staudinger', name:'シュタウディンガー', year:'1920s', icon:'🧬',
+   desc:'「高分子化合物」の概念を提唱。当初は異端扱いされたが、ノーベル賞で名誉を回復した。',
+   planet:'polymer'},
+];
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+let toastT;
+function toast(msg, ms=2000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+function addXP(n) {
+  const prev = ST.level;
+  ST.xp += n;
+  updateLvUI();
+  toast(`+${n} XP 獲得！`);
+  if(ST.level > prev) setTimeout(() => toast(`🎉 レベルアップ！ ${LEVELS[ST.level].title}`, 3000), 400);
+}
+
+function updateLvUI() {
+  let lv = 0;
+  for(let i = LEVELS.length-1; i >= 0; i--) {
+    if(ST.xp >= LEVELS[i].xp) { lv = i; break; }
+  }
+  ST.level = lv;
+  const cur = LEVELS[lv], next = LEVELS[lv+1];
+  document.getElementById('lv-title').textContent = cur.title;
+  ['g-xp','p-xp','codex-xp','dash-xp'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = ST.xp + ' XP';
+  });
+  if(next) {
+    const pct = Math.round(((ST.xp - cur.xp) / (next.xp - cur.xp)) * 100);
+    document.getElementById('xp-fill').style.width = pct + '%';
+    document.getElementById('xp-sub').textContent = ST.xp + ' / ' + next.xp + ' XP';
+  } else {
+    document.getElementById('xp-fill').style.width = '100%';
+    document.getElementById('xp-sub').textContent = 'MAX LEVEL 達成！';
+  }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+}
+
+function navTo(tab) {
+  if(tab === 'map') { renderMap(); showScreen('map'); }
+  else if(tab === 'codex') { renderCodex(); showScreen('codex'); }
+  else if(tab === 'dash') { renderDash(); showScreen('dash'); }
+}
+
+function goMap() { renderMap(); showScreen('map'); }
+
+// ══════════════════════════════════════════
+// MAP
+// ══════════════════════════════════════════
+function renderMap() {
+  updateLvUI();
+  const list = document.getElementById('planet-list');
+  list.innerHTML = '';
+  PLANETS.forEach(p => {
+    const st = ST.planets[p.id];
+    const stars = '★'.repeat(st.stars) + '☆'.repeat(3 - st.stars);
+    const done = st.stars > 0;
+    const div = document.createElement('div');
+    div.className = 'p-card ' + (done ? 'done' : '');
+    div.onclick = () => openPlanet(p.id);
+    div.innerHTML = `
+      <div class="p-orb" style="background:${p.col}22;border:1.5px solid ${p.col}55">${p.orb}</div>
+      <div class="p-info">
+        <div class="p-name">${p.name}</div>
+        <div class="p-sub">${p.sub}</div>
+        <div class="p-stars" style="color:var(--star)">${stars}</div>
+      </div>
+      <span class="p-badge ${done ? 'badge-done' : 'badge-new'}">${done ? 'CLEAR' : 'NEW'}</span>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════
+// PLANET ROUTER
+// ══════════════════════════════════════════
+let curPlanet = null, curStage = 's1';
+let animFrames = [];
+
+function cancelAnims() {
+  animFrames.forEach(id => cancelAnimationFrame(id));
+  animFrames = [];
+}
+
+function openPlanet(id) {
+  cancelAnims();
+  curPlanet = id;
+  curStage = 's1';
+  const p = PLANETS.find(x => x.id === id);
+  document.getElementById('p-title').textContent = p.name;
+  document.getElementById('p-xp').textContent = ST.xp + ' XP';
+  showScreen('planet');
+  renderPlanet();
+}
+
+function setStage(s) {
+  cancelAnims();
+  curStage = s;
+  renderPlanet();
+}
+
+function renderPlanet() {
+  const el = document.getElementById('p-content');
+  if(curPlanet === 'ion') buildIon(el);
+  else if(curPlanet === 'covalent') buildCovalent(el);
+  else if(curPlanet === 'metal') buildMetal(el);
+  else if(curPlanet === 'molecular') buildMolecular(el);
+  else if(curPlanet === 'crystal') buildCrystal(el);
+  else if(curPlanet === 'polymer') buildPolymer(el);
+}
+
+function stageTabs() {
+  const st = ST.planets[curPlanet];
+  return `<div class="stage-nav">
+    <button class="s-tab ${curStage==='s1'?'active':st.s1?'done':''}" onclick="setStage('s1')">${st.s1?'✓ ':'' }触れる</button>
+    <button class="s-tab ${curStage==='s2'?'active':st.s2?'done':''}" onclick="setStage('s2')">${st.s2?'✓ ':''}知る</button>
+    <button class="s-tab ${curStage==='s3'?'active':st.s3?'done':''}" onclick="setStage('s3')">${st.s3?'✓ ':''}試す</button>
+  </div>`;
+}
+
+// ══════════════════════════════════════════
+// DRAGGABLE
+// ══════════════════════════════════════════
+function makeDrag(el, container, onMove) {
+  let drag = false, ox = 0, oy = 0;
+  const gs = (e) => {
+    drag = true;
+    const t = e.touches ? e.touches[0] : e;
+    const r = container.getBoundingClientRect();
+    ox = t.clientX - r.left - parseFloat(el.style.left);
+    oy = t.clientY - r.top  - parseFloat(el.style.top);
+    e.preventDefault();
+  };
+  const gm = (e) => {
+    if(!drag) return;
+    const t = e.touches ? e.touches[0] : e;
+    const r = container.getBoundingClientRect();
+    const W = r.width, H = r.height;
+    const ew = el.offsetWidth, eh = el.offsetHeight;
+    const nx = Math.max(0, Math.min(W-ew, t.clientX-r.left-ox));
+    const ny = Math.max(0, Math.min(H-eh, t.clientY-r.top-oy));
+    el.style.left = nx + 'px';
+    el.style.top  = ny + 'px';
+    if(onMove) onMove(nx, ny);
+    e.preventDefault();
+  };
+  const ge = () => { drag = false; };
+  el.addEventListener('mousedown', gs);
+  el.addEventListener('touchstart', gs, {passive:false});
+  window.addEventListener('mousemove', gm);
+  window.addEventListener('touchmove', gm, {passive:false});
+  window.addEventListener('mouseup', ge);
+  window.addEventListener('touchend', ge);
+}
+
+// ══════════════════════════════════════════
+// ION PLANET
+// ══════════════════════════════════════════
+function buildIon(el) {
+  const p = PLANETS.find(x=>x.id==='ion');
+  el.innerHTML = `
+    <div class="s-hdr"><h2>${p.orb} ${p.name}</h2><p>${p.sub}</p></div>
+    ${stageTabs()}
+    <div id="ion-stage"></div>
+  `;
+  if(curStage === 's1') buildIonSim();
+  else if(curStage === 's2') buildIonLearn();
+  else buildIonQuiz();
+}
+
+function buildIonSim() {
+  document.getElementById('ion-stage').innerHTML = `
+    <div class="sim-wrap">
+      <div class="sim-lbl">NaをClに向かってドラッグしよう</div>
+      <div class="sim-stage" id="c-ion"></div>
+      <div class="sim-msg" id="ion-msg"></div>
+    </div>
+    <button class="btn-s" onclick="buildIonSim()">↺ リセット</button>
+    <button class="btn-s" style="margin-top:6px" onclick="setStage('s2')">原理を知る →</button>
+  `;
+  const c = document.getElementById('c-ion');
+  const W = c.offsetWidth||320, H = 210;
+  let bonded = false;
+
+  const na = mkAtom('Na','Na',W*.12,H/2-24);
+  const cl = mkAtom('Cl','Cl',W*.7,H/2-22);
+  c.appendChild(na); c.appendChild(cl);
+
+  const hint = mkel('div','',`position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--fog);white-space:nowrap`,'→ ドラッグして近づけよう');
+  c.appendChild(hint);
+
+  makeDrag(na, c, () => {
+    if(bonded) return;
+    const nx=parseFloat(na.style.left)+24, ny=parseFloat(na.style.top)+24;
+    const cx=parseFloat(cl.style.left)+22, cy=parseFloat(cl.style.top)+22;
+    const d = Math.hypot(nx-cx, ny-cy);
+    if(d < 65) { doIonBond(na, cl, c, hint); bonded = true; }
+  });
+}
+
+function doIonBond(na, cl, c, hint) {
+  hint.style.display = 'none';
+  // electron animation
+  const e = mkel('div','elec','left:'+  (parseFloat(na.style.left)+40)+'px;top:'+(parseFloat(na.style.top)+20)+'px','');
+  c.appendChild(e);
+  let ex = parseFloat(e.style.left), ey = parseFloat(e.style.top);
+  const tx = parseFloat(cl.style.left)+10, ty = parseFloat(cl.style.top)+20;
+  let t = 0;
+  function moveE() {
+    t += 0.06;
+    ex += (tx-ex)*0.08; ey += (ty-ey)*0.08;
+    e.style.left = ex+'px'; e.style.top = ey+'px';
+    if(t < 1.5) animFrames.push(requestAnimationFrame(moveE));
+    else {
+      e.style.display='none';
+      finishIonBond(na, cl, c);
+    }
+  }
+  animFrames.push(requestAnimationFrame(moveE));
+}
+
+function finishIonBond(na, cl, c) {
+  na.textContent = 'Na⁺'; na.classList.add('glow');
+  cl.textContent = 'Cl⁻'; cl.classList.add('glow');
+  const mid = document.createElement('div');
+  mid.style.cssText='position:absolute;font-size:20px;font-weight:700;color:var(--teal)';
+  const naL=parseFloat(na.style.left), naT=parseFloat(na.style.top);
+  const clL=parseFloat(cl.style.left), clT=parseFloat(cl.style.top);
+  mid.style.left = ((naL+clL+44)/2-8)+'px';
+  mid.style.top  = ((naT+clT+44)/2-14)+'px';
+  mid.textContent = '+';
+  c.appendChild(mid);
+  const ripple = document.createElement('div');
+  ripple.style.cssText=`position:absolute;width:60px;height:60px;border-radius:50%;border:2px solid var(--teal);left:${parseFloat(na.style.left)-6}px;top:${parseFloat(na.style.top)-6}px;animation:ripple .8s ease-out both`;
+  c.appendChild(ripple);
+  const msg = document.getElementById('ion-msg');
+  msg.textContent = '⚡ Na が電子1個を Cl に渡した！ Na⁺（陽イオン）と Cl⁻（陰イオン）が誕生。静電気力（クーロン力）で強く引き合う。これがイオン結合！';
+  msg.classList.add('show');
+  if(!ST.planets.ion.s1) {
+    ST.planets.ion.s1 = true;
+    addXP(25);
+    setTimeout(()=>toast('ステージ1 完了！知る に進もう',2500),600);
+  }
+}
+
+function buildIonLearn() {
+  document.getElementById('ion-stage').innerHTML = `
+    ${expCard('⚡','電子の授受とイオン化','タップで詳細',
+      'Na は最外殻に電子が1個だけ。Cl は最外殻に「空き」が1個。Na が電子を渡すと両方ともNeや Ar と同じ安定な電子配置になる。これが「オクテット則」。','var(--blue)')}
+    ${expCard('🔵','陽イオン・陰イオン','タップで詳細',
+      'Na → Na⁺ + e⁻（電子1個を失い正電荷）<br>Cl + e⁻ → Cl⁻（電子1個を得て負電荷）<br>異なる電荷どうしは静電気力で強く引き合う。','var(--blue)')}
+    ${expCard('🏛','NaCl結晶の構造','タップで詳細',
+      'Na⁺と Cl⁻が交互に並んだ岩塩型構造。1つの Na⁺の周りに Cl⁻が6個（正八面体状）隣接する。この三次元の静電引力が「硬くて高融点」の理由。','var(--blue)')}
+    ${expCard('💧','水に溶かすと？','タップで詳細',
+      '水分子（極性あり）が Na⁺と Cl⁻を取り囲んで（水和）、結晶から引き離す。溶けた後はイオンが自由に動けるため電気を通す。固体状態では不導体。','var(--blue)')}
+    <div class="formula-box">
+      <div class="formula-big">Na⁺ + Cl⁻ → NaCl</div>
+      <div class="formula-sub">電荷 1:1 → 最簡整数比で NaCl（組成式）</div>
+    </div>
+    <button class="btn-p" onclick="completeLearn('ion')">理解した！ 試す →</button>
+  `;
+  document.querySelectorAll('.exp-card').forEach(c=>{
+    c.onclick=()=>{
+      const b=c.querySelector('.exp-body');
+      b.classList.toggle('open');
+      if(b.classList.contains('open')&&!ST.planets.ion.s2){
+        ST.planets.ion.s2=true; addXP(20);
+      }
+    };
+  });
+}
+
+function buildIonQuiz() {
+  const qs = [
+    {q:'Na が Cl に電子を渡したとき、何が生まれる？',
+     opts:['Na⁺と Cl⁻','Na⁻と Cl⁺','NaとClが共有結合','Na₂Cl'],ans:0,
+     exp:'Na は電子を失い陽イオン Na⁺ に。Cl は電子を受け取り陰イオン Cl⁻ に。'},
+    {q:'イオン結晶が「脆い」のはなぜ？',
+     opts:['分子量が小さいから','ずれると同符号イオンが接触し反発するから','水素結合が弱いから','自由電子が多いから'],ans:1,
+     exp:'外力で層がずれると Na⁺-Na⁺、Cl⁻-Cl⁻ が隣接し反発 → 一気に割れる。'},
+    {q:'NaCl の水溶液が電気を通す理由は？',
+     opts:['Na が金属だから','水に溶けてイオンが自由に動けるから','H₂O が電気を通すから','酸性だから'],ans:1,
+     exp:'固体 NaCl はイオンが動けず不導体。水溶液ではイオンが自由に動いて電荷を運ぶ。'},
+    {q:'Na の原子番号は 11。最外殻の電子は何個？',
+     opts:['1個（不安定）','2個（安定）','8個（安定）','11個'],ans:0,
+     exp:'電子配置は 2,8,1。最外殻に1個だけあるので不安定で電子を手放しやすい。'},
+  ];
+  document.getElementById('ion-stage').innerHTML = buildQuizHTML(qs,'ion');
+  initQuiz('ion',qs);
+}
+
+// ══════════════════════════════════════════
+// COVALENT PLANET
+// ══════════════════════════════════════════
+function buildCovalent(el) {
+  const p = PLANETS.find(x=>x.id==='covalent');
+  el.innerHTML = `<div class="s-hdr"><h2>${p.orb} ${p.name}</h2><p>${p.sub}</p></div>${stageTabs()}<div id="cov-stage"></div>`;
+  if(curStage==='s1') buildCovSim();
+  else if(curStage==='s2') buildCovLearn();
+  else buildCovQuiz();
+}
+
+function buildCovSim() {
+  document.getElementById('cov-stage').innerHTML = `
+    <div class="sim-wrap">
+      <div class="sim-lbl">2つのH原子を近づけよう（どちらもドラッグ可）</div>
+      <div class="sim-stage" id="c-cov"></div>
+      <div class="sim-msg" id="cov-msg"></div>
+    </div>
+    <button class="btn-s" onclick="buildCovSim()">↺ リセット</button>
+    <div style="margin-top:10px">
+      <div style="font-size:12px;color:var(--fog);margin-bottom:6px">他の分子も試してみよう</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-sm" onclick="covMol('H2O')">H₂O を作る</button>
+        <button class="btn-sm" onclick="covMol('CO2')">CO₂ を作る</button>
+        <button class="btn-sm" onclick="covMol('N2')">N₂（三重結合）</button>
+      </div>
+    </div>
+  `;
+  const c=document.getElementById('c-cov'); if(!c)return;
+  const W=c.offsetWidth||320,H=210;
+  let bonded=false;
+  const h1=mkAtom('H','H',W*.12,H/2-18); const h2=mkAtom('H','H',W*.68,H/2-18);
+  const e1=mkElec(parseFloat(h1.style.left)+32,parseFloat(h1.style.top)+14);
+  const e2=mkElec(parseFloat(h2.style.left)-6, parseFloat(h2.style.top)+14);
+  c.append(h1,h2,e1,e2);
+  const ht=mkel('div','','position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--fog)','← H同士を近づけよう →');
+  c.appendChild(ht);
+  [h1,h2].forEach((h,i)=>{
+    makeDrag(h,c,()=>{
+      if(bonded)return;
+      const other=i===0?h2:h1;
+      const d=atomDist(h,other,18,18);
+      if(d<52){bonded=true; ht.style.display='none'; doCovBond(h1,h2,e1,e2,c);}
+    });
+  });
+}
+
+function doCovBond(h1,h2,e1,e2,c) {
+  const cx=(parseFloat(h1.style.left)+parseFloat(h2.style.left))/2;
+  const cy=(parseFloat(h1.style.top)+parseFloat(h2.style.top))/2;
+  h1.style.left=(cx-2)+'px'; h1.style.top=cy+'px';
+  h2.style.left=(cx+26)+'px'; h2.style.top=cy+'px';
+  e1.style.left=(cx+12)+'px'; e1.style.top=(cy+8)+'px';
+  e2.style.left=(cx+20)+'px'; e2.style.top=(cy+14)+'px';
+  h1.classList.add('glow'); h2.classList.add('glow');
+  e1.style.background=e2.style.background=var_('gold2');
+  drawBond(c, cx+18, cy+18, cx+36, cy+18, '');
+  const msg=document.getElementById('cov-msg');
+  msg.textContent='🤝 2つのHが電子を1個ずつ出し合って共有電子対を形成！ 両Hともに He と同じ電子配置（2個）になり安定。これが共有結合 H–H（H₂分子）！';
+  msg.classList.add('show');
+  if(!ST.planets.covalent.s1){ST.planets.covalent.s1=true;addXP(25);}
+}
+
+function covMol(type) {
+  const c=document.getElementById('c-cov'); if(!c)return;
+  c.innerHTML='';
+  const W=c.offsetWidth||320,H=210;
+  const msg=document.getElementById('cov-msg');
+  if(type==='H2O'){
+    const o=mkAtom('O','O',W/2-22,H/2-50);
+    const h1=mkAtom('H','H',W*.2,H*0.7-18);
+    const h2=mkAtom('H','H',W*.7,H*0.7-18);
+    c.append(o,h1,h2);
+    o.classList.add('glow'); h1.classList.add('glow'); h2.classList.add('glow');
+    const ocx=parseFloat(o.style.left)+22,ocy=parseFloat(o.style.top)+22;
+    const h1cx=parseFloat(h1.style.left)+18,h1cy=parseFloat(h1.style.top)+18;
+    const h2cx=parseFloat(h2.style.left)+18,h2cy=parseFloat(h2.style.top)+18;
+    drawBond(c,ocx,ocy,h1cx,h1cy,'');
+    drawBond(c,ocx,ocy,h2cx,h2cy,'');
+    const ang=mkel('div','','position:absolute;left:'+(W/2-25)+'px;top:'+(H/2+20)+'px;font-size:11px;color:var(--purple);font-weight:600','104.5°');
+    c.appendChild(ang);
+    msg.textContent='💧 H₂O：O が H×2 と共有結合。Oに非共有電子対が2組あり強く反発するため結合角が104.5°（折れ線形）になる。これが水の極性と特異な性質の原因。';
+    msg.classList.add('show');
+    if(!ST.planets.covalent.s1){ST.planets.covalent.s1=true;addXP(25);}
+  } else if(type==='CO2'){
+    const cv=mkAtom('C','C',W/2-22,H/2-22);
+    const ol=mkAtom('O','O',W*.12,H/2-22);
+    const or=mkAtom('O','O',W*.73,H/2-22);
+    c.append(cv,ol,or);
+    [cv,ol,or].forEach(a=>a.classList.add('glow'));
+    const ccx=parseFloat(cv.style.left)+22,ccy=parseFloat(cv.style.top)+22;
+    const lcx=parseFloat(ol.style.left)+22,lcy=parseFloat(ol.style.top)+22;
+    const rcx=parseFloat(or.style.left)+22,rcy=parseFloat(or.style.top)+22;
+    drawBond(c,ccx-4,ccy-3,lcx,lcy,'bond2');
+    drawBond(c,ccx-4,ccy+3,lcx,lcy+6,'bond2');
+    drawBond(c,ccx+4,ccy-3,rcx,rcy,'bond2');
+    drawBond(c,ccx+4,ccy+3,rcx,rcy+6,'bond2');
+    msg.textContent='CO₂：C と O が二重結合（=）×2。直線形で対称なため結合の極性が打ち消し合い、CO₂は無極性分子になる。（固体：ドライアイス、昇華性あり）';
+    msg.classList.add('show');
+  } else if(type==='N2'){
+    const n1=mkAtom('H','N',W*.25,H/2-22); n1.style.background='#7c3aed';
+    const n2=mkAtom('H','N',W*.62,H/2-22); n2.style.background='#7c3aed';
+    c.append(n1,n2);
+    [n1,n2].forEach(a=>a.classList.add('glow-gold'));
+    const x1=parseFloat(n1.style.left)+18,y1=parseFloat(n1.style.top)+18;
+    const x2=parseFloat(n2.style.left)+18,y2=parseFloat(n2.style.top)+18;
+    drawBond(c,x1,y1-4,x2,y2-4,'bond3');
+    drawBond(c,x1,y1,x2,y2,'bond3');
+    drawBond(c,x1,y1+4,x2,y2+4,'bond3');
+    const lbl=mkel('div','','position:absolute;top:10px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--purple);font-weight:600','N≡N 三重結合');
+    c.appendChild(lbl);
+    msg.textContent='N₂：3組の共有電子対（三重結合 N≡N）。自然界で最も安定な分子の1つで、空気の約78%を占める。三重結合は非常に強く切断が難しい。';
+    msg.classList.add('show');
+    if(!ST.planets.covalent.s1){ST.planets.covalent.s1=true;addXP(25);}
+  }
+}
+
+function buildCovLearn() {
+  document.getElementById('cov-stage').innerHTML=`
+    ${expCard('🤝','共有電子対の仕組み','タップで詳細',
+      '2つの原子が電子を1個ずつ出し合い「共有電子対」を形成。2個の電子を両方の原子が持つことで、それぞれ希ガスと同じ安定な電子配置になる。','var(--pink)')}
+    ${expCard('📐','VSEPR理論と分子の形','タップで詳細',
+      '電子対（共有・非共有）は互いに反発してできるだけ離れようとする。<br>CH₄：正四面体（109.5°）<br>H₂O：折れ線形（104.5°）← 非共有電子対2組が角度を縮める<br>NH₃：三角錐形（107°）','var(--pink)')}
+    ${expCard('⚖️','電気陰性度と極性','タップで詳細',
+      '電気陰性度の異なる原子間の共有結合では電子対が偏る（δ+とδ−）。<br>CO₂は対称で無極性 → H₂Oは非対称で極性あり。<br>この差が「水に溶けるか」を決める。','var(--pink)')}
+    ${expCard('🔗','単・二・三重結合','タップで詳細',
+      'H−H：単結合（電子対1組）<br>O=O：二重結合（電子対2組）<br>N≡N：三重結合（電子対3組）<br>共有する電子対が多いほど結合エネルギーが大きく、結合距離が短い。','var(--pink)')}
+    <button class="btn-p" onclick="completeLearn('covalent')">理解した！ 試す →</button>
+  `;
+  document.querySelectorAll('.exp-card').forEach(c=>{
+    c.onclick=()=>{
+      c.querySelector('.exp-body').classList.toggle('open');
+      if(!ST.planets.covalent.s2){ST.planets.covalent.s2=true;addXP(20);}
+    };
+  });
+}
+
+function buildCovQuiz() {
+  const qs=[
+    {q:'H₂ が安定に存在できる理由は？',
+     opts:['Hがイオンになるから','2つのHが電子を共有してHeの電子配置になるから','Hが電子を渡すから','分子量が大きいから'],ans:1,
+     exp:'各Hが電子1個ずつ出し合い共有電子対を形成。2個の電子を共有することで両HともHe（2個）と同じ安定配置になる。'},
+    {q:'H₂O が折れ線形をしている理由は？',
+     opts:['O原子が重いから','Oに非共有電子対が2組あり結合角を狭めるから','H原子が2個あるから','水素結合があるから'],ans:1,
+     exp:'VSEPR理論：非共有電子対は結合電子対より強く反発するため H-O-H の角度が109.5°より狭い104.5°になる。'},
+    {q:'CO₂が無極性分子なのはなぜ？',
+     opts:['炭素原子が中央にあるから','直線形対称構造でC=Oの極性が打ち消し合うから','二重結合があるから','分子量が小さいから'],ans:1,
+     exp:'CO₂は O=C=O の直線形。C=O 結合には極性があるが、2本が正反対を向いているためベクトル和がゼロになり無極性分子となる。'},
+    {q:'N≡N（窒素）の三重結合が非常に強い理由は？',
+     opts:['Nが重い元素だから','3組の共有電子対が同時に2原子を引き合わせるから','Nが電子を失いやすいから','分子間力が大きいから'],ans:1,
+     exp:'三重結合では3組の共有電子対が両N原子を結びつける。電子対が多いほど結合エネルギーが大きく引力が強くなる。'},
+  ];
+  document.getElementById('cov-stage').innerHTML=buildQuizHTML(qs,'covalent');
+  initQuiz('covalent',qs);
+}
+
+// ══════════════════════════════════════════
+// METAL PLANET
+// ══════════════════════════════════════════
+function buildMetal(el) {
+  const p=PLANETS.find(x=>x.id==='metal');
+  el.innerHTML=`<div class="s-hdr"><h2>${p.orb} ${p.name}</h2><p>${p.sub}</p></div>${stageTabs()}<div id="met-stage"></div>`;
+  if(curStage==='s1') buildMetalSim();
+  else if(curStage==='s2') buildMetalLearn();
+  else buildMetalQuiz();
+}
+
+let metElecs=[], metForce=false, metAnimId=null;
+function buildMetalSim() {
+  if(metAnimId){cancelAnimationFrame(metAnimId);metAnimId=null;}
+  metElecs=[]; metForce=false;
+  document.getElementById('met-stage').innerHTML=`
+    <div class="sim-wrap">
+      <div class="sim-lbl">自由電子が金属全体を飛び回っている</div>
+      <div class="sim-stage" id="c-met"></div>
+      <div class="sim-msg" id="met-msg"></div>
+    </div>
+    <div style="display:flex;gap:7px;margin-top:8px">
+      <button class="btn-sm" style="flex:1" onclick="metVoltage()">⚡ 電圧をかける</button>
+      <button class="btn-sm" style="flex:1" onclick="metHeat()">🔥 熱を加える</button>
+      <button class="btn-sm" onclick="buildMetalSim()">↺</button>
+    </div>
+    <button class="btn-s" style="margin-top:6px" onclick="setStage('s2')">原理を知る →</button>
+  `;
+  const c=document.getElementById('c-met'); if(!c)return;
+  const W=c.offsetWidth||320,H=210;
+  for(let r=0;r<3;r++) for(let col=0;col<5;col++){
+    const ion=document.createElement('div');
+    ion.style.cssText=`position:absolute;width:40px;height:40px;border-radius:50%;background:rgba(217,119,6,.15);border:1.5px solid rgba(217,119,6,.45);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fbbf24;font-weight:600`;
+    ion.textContent='Fe²⁺';
+    ion.style.left=(W*0.06+col*56)+'px';
+    ion.style.top=(16+r*58)+'px';
+    c.appendChild(ion);
+  }
+  for(let i=0;i<10;i++){
+    const e=document.createElement('div');
+    e.style.cssText=`position:absolute;width:7px;height:7px;border-radius:50%;background:var(--gold2)`;
+    e.style.left=(Math.random()*(W-20)+6)+'px';
+    e.style.top=(Math.random()*170+10)+'px';
+    c.appendChild(e);
+    metElecs.push({el:e,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,x:parseFloat(e.style.left),y:parseFloat(e.style.top)});
+  }
+  if(!ST.planets.metal.s1){ST.planets.metal.s1=true;addXP(20);}
+  function anim(){
+    const W2=c.offsetWidth||320;
+    metElecs.forEach(e=>{
+      e.x+=e.vx+(metForce?2.5:0);
+      e.y+=e.vy;
+      if(e.x<2){e.x=2;e.vx=Math.abs(e.vx);}
+      if(e.x>W2-10){e.x=metForce?4:W2-10;if(!metForce)e.vx=-Math.abs(e.vx);}
+      if(e.y<2){e.y=2;e.vy=Math.abs(e.vy);}
+      if(e.y>H-10){e.y=H-10;e.vy=-Math.abs(e.vy);}
+      e.el.style.left=e.x+'px'; e.el.style.top=e.y+'px';
+    });
+    metAnimId=requestAnimationFrame(anim);
+  }
+  anim();
+}
+
+function metVoltage(){
+  metForce=!metForce;
+  const msg=document.getElementById('met-msg'); if(!msg)return;
+  if(metForce){
+    msg.textContent='⚡ 電圧をかけた！ 自由電子が一方向へ流れ始めた。これが電流の正体。金属が電気を通す理由はここにある。';
+    msg.classList.add('show');
+  } else {
+    msg.classList.remove('show');
+  }
+}
+
+function metHeat(){
+  const msg=document.getElementById('met-msg'); if(!msg)return;
+  metElecs.forEach(e=>{e.vx*=1.7;e.vy*=1.7;});
+  msg.textContent='🔥 熱を加えた！ 自由電子の運動が激しくなった。自由電子が熱エネルギーを素早く伝達するため、金属は熱伝導性が高い。';
+  msg.classList.add('show');
+}
+
+function buildMetalLearn(){
+  document.getElementById('met-stage').innerHTML=`
+    ${expCard('🌊','自由電子モデル','タップで詳細',
+      '金属原子は最外殻電子（価電子）を放出して金属陽イオンになる。その電子は特定の原子に束縛されず金属全体を自由に動く。この「電子の海」が陽イオン同士を結びつける。','var(--amber)')}
+    ${expCard('⚡','電気・熱伝導性','タップで詳細',
+      '電圧をかける → 自由電子が一方向に流れる → 電流。<br>熱を加える → 電子の運動が活発化 → 熱エネルギーを高速で伝達。<br>イオン結晶や分子結晶と違い、固体でも常に導電。','var(--amber)')}
+    ${expCard('🔨','展性・延性の秘密','タップで詳細',
+      '外力で金属原子の層がずれても、電子の海がその変形に追随して結合が切れない。イオン結晶では同符号イオンが接触して反発し割れるが、金属はずれても「つながり続ける」。','var(--amber)')}
+    ${expCard('✨','金属光沢の理由','タップで詳細',
+      '自由電子は光（電磁波）を吸収してすぐに再放射する（反射）。これが金属のキラキラした光沢の原因。金・銀・銅の色の違いは吸収する光の波長の違いによる。','var(--amber)')}
+    ${expCard('🔲','結晶格子の種類','タップで詳細',
+      '体心立方格子（BCC）：Na, K, Fe - 充填率68%<br>面心立方格子（FCC）：Cu, Ag, Au, Al - 充填率74%<br>六方最密充填（HCP）：Mg, Zn, Ti - 充填率74%','var(--amber)')}
+    <button class="btn-p" onclick="completeLearn('metal')">理解した！ 試す →</button>
+  `;
+  document.querySelectorAll('.exp-card').forEach(c=>{
+    c.onclick=()=>{
+      c.querySelector('.exp-body').classList.toggle('open');
+      if(!ST.planets.metal.s2){ST.planets.metal.s2=true;addXP(20);}
+    };
+  });
+}
+
+function buildMetalQuiz(){
+  const qs=[
+    {q:'金属が電気を通す最大の理由は？',
+     opts:['金属原子が大きいから','自由電子が全体を自由に動けるから','融点が高いから','水に溶けやすいから'],ans:1,
+     exp:'自由電子は特定の原子に束縛されない。電圧をかけると一方向に流れて電流となる。'},
+    {q:'金属を叩くと薄く広がる（展性）のはなぜ？',
+     opts:['原子が柔らかいから','電子の海が変形に追随して結合が切れないから','イオン結合が強いから','共有結合が柔軟だから'],ans:1,
+     exp:'金属は原子層がずれても電子の海がそれに追随するため結合が維持される。'},
+    {q:'金属光沢の原因は？',
+     opts:['原子が重いから','自由電子が光を吸収・再放射（反射）するから','融点が低いから','分子量が大きいから'],ans:1,
+     exp:'自由電子は光（電磁波）を吸収して即座に再放射する。これが金属の光沢の正体。'},
+    {q:'金属結合のみをしているのはどれ？',
+     opts:['NaCl（食塩）','H₂O（水）','Cu（銅）','CO₂（二酸化炭素）'],ans:2,
+     exp:'銅（Cu）は純粋な金属元素。NaClはイオン結合、H₂OとCO₂は共有結合。'},
+  ];
+  document.getElementById('met-stage').innerHTML=buildQuizHTML(qs,'metal');
+  initQuiz('metal',qs);
+}
+
+// ══════════════════════════════════════════
+// MOLECULAR PLANET
+// ══════════════════════════════════════════
+function buildMolecular(el) {
+  const p=PLANETS.find(x=>x.id==='molecular');
+  el.innerHTML=`<div class="s-hdr"><h2>${p.orb} ${p.name}</h2><p>${p.sub}</p></div>${stageTabs()}<div id="mol-stage"></div>`;
+  if(curStage==='s1') buildMolSim();
+  else if(curStage==='s2') buildMolLearn();
+  else buildMolQuiz();
+}
+
+function buildMolSim(){
+  document.getElementById('mol-stage').innerHTML=`
+    <div class="sim-wrap">
+      <div class="sim-lbl">分子の形を選んで3D構造を確認しよう</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:10px">
+        ${[['H₂O','折れ線形','#db2777'],['NH₃','三角錐形','#16a34a'],['CH₄','正四面体形','#d97706'],['CO₂','直線形','#7c3aed'],['BF₃','正三角形','#0891b2'],['SF₆','正八面体形','#be123c']].map(([f,s,clr])=>
+          `<button class="btn-sm" style="background:${clr}22;border-color:${clr}55;color:var(--white);padding:9px 6px;font-size:12px" onclick="showMolShape('${f}','${s}','${clr}')">${f}<br><span style="font-size:10px;color:var(--fog)">${s}</span></button>`
+        ).join('')}
+      </div>
+      <div class="sim-stage" id="c-mol" style="height:180px"></div>
+      <div class="sim-msg" id="mol-msg"></div>
+    </div>
+    <button class="btn-s" onclick="setStage('s2')">原理を知る →</button>
+  `;
+  showMolShape('H₂O','折れ線形','#db2777');
+}
+
+function showMolShape(formula,shape,clr){
+  const c=document.getElementById('c-mol'); if(!c)return;
+  c.innerHTML='';
+  const W=c.offsetWidth||320,H=180;
+  const msg=document.getElementById('mol-msg');
+
+  const infos={
+    'H₂O':{center:'O',ligands:[['H',W*.2,H*.65],['H',W*.7,H*.65]],lone:2,angle:'104.5°',
+      desc:'Oに非共有電子対2組。反発で結合角が狭まり折れ線形に。極性分子。'},
+    'NH₃':{center:'N',ligands:[['H',W*.2,H*.72],['H',W*.5,H*.8],['H',W*.78,H*.72]],lone:1,angle:'107°',
+      desc:'Nに非共有電子対1組。三角錐形。極性分子。アンモニアの刺激臭の原因。'},
+    'CH₄':{center:'C',ligands:[['H',W*.15,H*.35],['H',W*.75,H*.35],['H',W*.25,H*.78],['H',W*.65,H*.78]],lone:0,angle:'109.5°',
+      desc:'非共有電子対なし。正四面体形。無極性分子。天然ガスの主成分。'},
+    'CO₂':{center:'C',ligands:[['O',W*.1,H*.48],['O',W*.78,H*.48]],lone:0,angle:'180°',
+      desc:'直線形・対称。C=O結合の極性が打ち消し合い無極性分子。ドライアイスの成分。'},
+    'BF₃':{center:'B',ligands:[['F',W*.5,H*.12],['F',W*.15,H*.72],['F',W*.78,H*.72]],lone:0,angle:'120°',
+      desc:'正三角形。Bは最外殻が6電子でオクテット則の例外。電子不足のため Lewis酸として働く。'},
+    'SF₆':{center:'S',ligands:[['F',W*.5,H*.08],['F',W*.5,H*.82],['F',W*.12,H*.46],['F',W*.82,H*.46],['F',W*.22,H*.2],['F',W*.72,H*.2]],lone:0,angle:'90°',
+      desc:'正八面体形。S は拡張オクテット（12電子）。すべて等価な F-S-F 結合角90°。'},
+  };
+  const info=infos[formula]||infos['H₂O'];
+  const cx=W/2-22, cy=H*.35;
+  const center=mkAtom(info.center,info.center,cx,cy-22);
+  center.style.background=clr;
+  c.appendChild(center);
+  const cCx=parseFloat(center.style.left)+22, cCy=parseFloat(center.style.top)+22;
+  info.ligands.forEach(([sym,lx,ly])=>{
+    const lig=mkAtom('H',sym,lx-18,ly-18);
+    lig.style.background='rgba(255,255,255,.15)';
+    lig.style.borderColor='rgba(255,255,255,.3)';
+    c.appendChild(lig);
+    drawBond(c,cCx,cCy,parseFloat(lig.style.left)+18,parseFloat(lig.style.top)+18,'');
+  });
+  if(info.lone>0){
+    for(let i=0;i<info.lone;i++){
+      const lp=document.createElement('div');
+      lp.style.cssText=`position:absolute;font-size:12px;color:${clr}`;
+      lp.style.left=(cx+38+i*18)+'px';
+      lp.style.top=(cy-28)+'px';
+      lp.textContent='::';
+      c.appendChild(lp);
+    }
+  }
+  const angleLbl=mkel('div','',`position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:11px;color:${clr};font-weight:600`,`${shape} / 結合角 ${info.angle}`);
+  c.appendChild(angleLbl);
+  msg.textContent=info.desc;
+  msg.classList.add('show');
+  if(!ST.planets.molecular.s1){ST.planets.molecular.s1=true;addXP(25);}
+}
+
+function buildMolLearn(){
+  document.getElementById('mol-stage').innerHTML=`
+    ${expCard('📐','VSEPR理論','タップで詳細',
+      '電子対は互いに反発してできるだけ離れようとする。<br>結合電子対2 → 直線形(180°)<br>結合電子対3 → 正三角形(120°)<br>結合電子対4 → 正四面体(109.5°)','var(--purple)')}
+    ${expCard('🔀','非共有電子対の影響','タップで詳細',
+      '非共有電子対は結合電子対より強く反発するため結合角を狭める。<br>CH₄(109.5°) > NH₃(107°) > H₂O(104.5°)<br>括弧内は結合角で、非共有電子対が1組増えるごとに約2.5°狭まる。','var(--purple)')}
+    ${expCard('⚖️','分子の極性判定','タップで詳細',
+      '①各結合に極性があるか（電気陰性度の差）<br>②分子が対称か（極性ベクトルが打ち消し合うか）<br>CO₂：直線形・対称 → 無極性<br>H₂O：折れ線形・非対称 → 極性あり','var(--purple)')}
+    <button class="btn-p" onclick="completeLearn('molecular')">理解した！ 試す →</button>
+  `;
+  document.querySelectorAll('.exp-card').forEach(c=>{
+    c.onclick=()=>{
+      c.querySelector('.exp-body').classList.toggle('open');
+      if(!ST.planets.molecular.s2){ST.planets.molecular.s2=true;addXP(20);}
+    };
+  });
+}
+
+function buildMolQuiz(){
+  const qs=[
+    {q:'CH₄ の結合角はいくつ？',
+     opts:['90°','109.5°','120°','180°'],ans:1,
+     exp:'CH₄は正四面体形。Cの4本の結合が最大限離れた形で結合角は109.5°。'},
+    {q:'NH₃ の結合角が CH₄ より小さいのはなぜ？',
+     opts:['Nが大きいから','Hが小さいから','非共有電子対1組が結合角を狭めるから','三角形だから'],ans:2,
+     exp:'非共有電子対は結合電子対より強く反発するため H-N-H の角度が109.5°より狭い107°になる。'},
+    {q:'直線形(180°)になる分子はどれ？',
+     opts:['H₂O','NH₃','CO₂','CH₄'],ans:2,
+     exp:'CO₂は O=C=O の直線形。中心のCに非共有電子対がなく、2つの二重結合が180°で反発する。'},
+    {q:'H₂O が極性分子になる理由は？',
+     opts:['H原子が2個あるから','折れ線形で非対称なためOH結合の極性が打ち消されないから','OとHの質量が違うから','水素結合があるから'],ans:1,
+     exp:'H₂Oは折れ線形（非対称）。O-H結合の極性ベクトルが打ち消し合わないため、分子全体として極性を持つ。'},
+  ];
+  document.getElementById('mol-stage').innerHTML=buildQuizHTML(qs,'molecular');
+  initQuiz('molecular',qs);
+}
+
+// ══════════════════════════════════════════
+// CRYSTAL PLANET
+// ══════════════════════════════════════════
+function buildCrystal(el){
+  const p=PLANETS.find(x=>x.id==='crystal');
+  el.innerHTML=`<div class="s-hdr"><h2>${p.orb} ${p.name}</h2><p>${p.sub}</p></div>${stageTabs()}<div id="cry-stage"></div>`;
+  if(curStage==='s1') buildCrySim();
+  else if(curStage==='s2') buildCryLearn();
+  else buildCryQuiz();
+}
+
+function buildCrySim(){
+  document.getElementById('cry-stage').innerHTML=`
+    <div class="sim-wrap">
+      <div class="sim-lbl">4種類の結晶を比較しよう</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:10px">
+        ${[['イオン結晶','NaCl','#2563eb'],['分子結晶','CO₂','#7c3aed'],['共有結合結晶','ダイヤ','#d97706'],['金属結晶','Fe','#b45309']].map(([n,ex,c])=>
+          `<button class="btn-sm" style="background:${c}22;border-color:${c}55;color:var(--white);padding:9px 6px;font-size:12px" onclick="showCrystalType('${n}','${c}')">${n}<br><span style="font-size:10px;color:var(--fog)">${ex}</span></button>`
+        ).join('')}
+      </div>
+      <div class="sim-stage" id="c-cry" style="height:200px"></div>
+      <div class="sim-msg" id="cry-msg"></div>
+    </div>
+    <button class="btn-s" onclick="setStage('s2')">原理を知る →</button>
+  `;
+  showCrystalType('イオン結晶','#2563eb');
+}
+
+function showCrystalType(type, clr){
+  const c=document.getElementById('c-cry'); if(!c)return;
+  c.innerHTML='';
+  const W=c.offsetWidth||320,H=200;
+  const msg=document.getElementById('cry-msg');
+  const data={
+    'イオン結晶':{particles:genGrid(W,H,5,4,clr,'#dc2626'),title:'Na⁺(青) と Cl⁻(赤) が交互に並ぶ',desc:'イオン結晶：構成粒子=イオン、結合=静電引力（強）。融点高・硬くて脆い・水溶液で導電。例：NaCl, MgO, CaCO₃'},
+    '分子結晶':{particles:genGrid(W,H,4,3,clr,clr,true),title:'分子がファンデルワールス力で配列',desc:'分子結晶：構成粒子=分子、結合=分子間力（弱）。融点低・軟らかい・固体/液体とも不導体。例：CO₂, I₂, H₂O（氷）'},
+    '共有結合結晶':{particles:genDiamond(W,H,clr),title:'すべての原子が共有結合で連結',desc:'共有結合の結晶：構成粒子=原子、結合=共有結合（非常に強）。融点超高・最硬・不導体（黒鉛は例外）。例：ダイヤ, SiO₂, Si'},
+    '金属結晶':{particles:genMetal(W,H,clr),title:'陽イオンを自由電子の海が包む',desc:'金属結晶：構成粒子=金属陽イオン、結合=金属結合（自由電子）。展性・延性・電導性・光沢あり。例：Fe, Cu, Au'},
+  };
+  const d=data[type]||data['イオン結晶'];
+  d.particles.forEach(p=>c.appendChild(p));
+  const lbl=mkel('div','',`position:absolute;top:5px;left:50%;transform:translateX(-50%);font-size:10px;color:${clr};font-weight:600;white-space:nowrap`,d.title);
+  c.appendChild(lbl);
+  msg.textContent=d.desc;
+  msg.classList.add('show');
+  if(!ST.planets.crystal.s1){ST.planets.crystal.s1=true;addXP(25);}
+}
+
+function genGrid(W,H,cols,rows,c1,c2,same=false){
+  const res=[];
+  for(let r=0;r<rows;r++) for(let cl=0;cl<cols;cl++){
+    const div=document.createElement('div');
+    const even=(r+cl)%2===0;
+    const col=same?c1:even?c1:c2;
+    div.style.cssText=`position:absolute;width:34px;height:34px;border-radius:50%;background:${col}33;border:1.5px solid ${col};display:flex;align-items:center;justify-content:center;font-size:10px;color:${col};font-weight:600`;
+    div.textContent=same?'M':(even?'＋':'－');
+    div.style.left=(W/(cols+1)*(cl+1)-17)+'px';
+    div.style.top=(H/(rows+2)*(r+1)+15)+'px';
+    res.push(div);
+  }
+  return res;
+}
+
+function genDiamond(W,H,clr){
+  const res=[];
+  const pts=[[W*.5,H*.2],[W*.25,H*.42],[W*.75,H*.42],[W*.38,H*.68],[W*.62,H*.68],[W*.5,H*.9]];
+  const bonds=[[0,1],[0,2],[1,3],[2,4],[3,5],[4,5],[1,2],[3,4]];
+  bonds.forEach(([a,b])=>{
+    const ln=document.createElement('div');
+    const dx=pts[b][0]-pts[a][0],dy=pts[b][1]-pts[a][1];
+    const len=Math.hypot(dx,dy);
+    const ang=Math.atan2(dy,dx)*180/Math.PI;
+    ln.style.cssText=`position:absolute;height:2px;background:${clr};border-radius:1px;transform-origin:left center`;
+    ln.style.left=pts[a][0]+'px';ln.style.top=pts[a][1]+'px';
+    ln.style.width=len+'px';ln.style.transform=`rotate(${ang}deg)`;
+    res.push(ln);
+  });
+  pts.forEach(([x,y])=>{
+    const n=document.createElement('div');
+    n.style.cssText=`position:absolute;width:20px;height:20px;border-radius:50%;background:${clr};display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700`;
+    n.style.left=(x-10)+'px';n.style.top=(y-10)+'px';n.textContent='C';
+    res.push(n);
+  });
+  return res;
+}
+
+function genMetal(W,H,clr){
+  const res=[];
+  const ions=[];
+  for(let r=0;r<3;r++) for(let cl=0;cl<5;cl++){
+    const div=document.createElement('div');
+    div.style.cssText=`position:absolute;width:38px;height:38px;border-radius:50%;background:${clr}22;border:1.5px solid ${clr}66;display:flex;align-items:center;justify-content:center;font-size:10px;color:${clr};font-weight:600`;
+    div.textContent='M⁺';
+    const x=W/(6)*(cl+1)-19, y=18+r*52;
+    div.style.left=x+'px'; div.style.top=y+'px';
+    res.push(div); ions.push({x:x+19,y:y+19});
+  }
+  for(let i=0;i<8;i++){
+    const e=document.createElement('div');
+    e.style.cssText=`position:absolute;width:6px;height:6px;border-radius:50%;background:var(--gold2)`;
+    e.style.left=(Math.random()*(W-20)+8)+'px';
+    e.style.top=(Math.random()*160+15)+'px';
+    res.push(e);
+  }
+  return res;
+}
+
+function buildCryLearn(){
+  document.getElementById('cry-stage').innerHTML=`
+    <div style="overflow-x:auto;margin-bottom:12px">
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="background:var(--card2)">
+        ${['結晶の種類','粒子','結合力','融点','導電性','例'].map(h=>`<th style="padding:7px 5px;color:var(--gold);font-weight:600;text-align:left;white-space:nowrap">${h}</th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${[
+          ['イオン結晶','イオン','静電引力','高','水溶液◯','NaCl'],
+          ['分子結晶','分子','分子間力','低','✕','CO₂, I₂'],
+          ['共有結合結晶','原子','共有結合','超高','✕(黒鉛は◯)','ダイヤ'],
+          ['金属結晶','金属陽イオン','自由電子','中〜高','◎','Fe, Cu'],
+        ].map((row,i)=>`<tr style="background:${i%2?'rgba(255,255,255,.03)':'transparent'};border-top:1px solid var(--border)">
+          ${row.map(d=>`<td style="padding:7px 5px;color:var(--fog);white-space:nowrap">${d}</td>`).join('')}
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+    ${expCard('🏆','ダイヤモンドが最硬な理由','タップで詳細',
+      'すべてのC原子が4本の共有結合（正四面体）で連結した巨大分子。この結合を切るには莫大なエネルギーが必要。融点3550℃以上、モース硬度10（最高値）。','var(--teal)')}
+    ${expCard('✏️','黒鉛が柔らかい理由','タップで詳細',
+      'C原子が平面六角形に結合した層状構造。層と層の間はファンデルワールス力（弱）。層が滑りやすく鉛筆の芯として使える。層内の自由電子で電気を通す（例外！）。','var(--teal)')}
+    <button class="btn-p" onclick="completeLearn('crystal')">理解した！ 試す →</button>
+  `;
+  document.querySelectorAll('.exp-card').forEach(c=>{
+    c.onclick=()=>{
+      c.querySelector('.exp-body').classList.toggle('open');
+      if(!ST.planets.crystal.s2){ST.planets.crystal.s2=true;addXP(20);}
+    };
+  });
+}
+
+function buildCryQuiz(){
+  const qs=[
+    {q:'融点が最も高い結晶の種類は？',
+     opts:['分子結晶','イオン結晶','金属結晶','共有結合の結晶'],ans:3,
+     exp:'共有結合の結晶（ダイヤなど）はすべての原子が共有結合で連結。この結合を切るには莫大なエネルギーが必要で融点は3000℃を超える。'},
+    {q:'ドライアイス（CO₂）が低温で昇華する理由は？',
+     opts:['共有結合が弱いから','分子間のファンデルワールス力が弱いから','イオン結合がないから','原子量が小さいから'],ans:1,
+     exp:'CO₂は分子結晶。分子間力（ファンデルワールス力）が弱いため低温・低圧でも固体→気体に変化（昇華）する。'},
+    {q:'黒鉛（グラファイト）が電気を通す理由は？',
+     opts:['イオンがあるから','炭素が金属だから','層内に自由に動ける電子があるから','共有結合が強いから'],ans:2,
+     exp:'黒鉛では層内のC原子の結合で使われない電子（π電子）が自由に動ける。共有結合の結晶の中では例外的に導電性を持つ。'},
+    {q:'固体状態で電気を通さないのはどれ？',
+     opts:['鉄（金属結晶）','食塩（イオン結晶）','銅（金属結晶）','黒鉛（共有結合結晶）'],ans:1,
+     exp:'固体の食塩（イオン結晶）はイオンが動けないため不導体。水に溶かすとイオンが自由になり導電する。'},
+  ];
+  document.getElementById('cry-stage').innerHTML=buildQuizHTML(qs,'crystal');
+  initQuiz('crystal',qs);
+}
+
+// ══════════════════════════════════════════
+// POLYMER PLANET
+// ══════════════════════════════════════════
+function buildPolymer(el){
+  const p=PLANETS.find(x=>x.id==='polymer');
+  el.innerHTML=`<div class="s-hdr"><h2>${p.orb} ${p.name}</h2><p>${p.sub}</p></div>${stageTabs()}<div id="pol-stage"></div>`;
+  if(curStage==='s1') buildPolSim();
+  else if(curStage==='s2') buildPolLearn();
+  else buildPolQuiz();
+}
+
+function buildPolSim(){
+  document.getElementById('pol-stage').innerHTML=`
+    <div class="sim-wrap">
+      <div class="sim-lbl">ボタンを押してモノマーを繋げよう</div>
+      <div class="sim-stage" id="c-pol" style="height:190px"></div>
+      <div class="sim-msg" id="pol-msg"></div>
+    </div>
+    <div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn-sm" onclick="addMonomer()">＋ モノマーを追加</button>
+      <button class="btn-sm" onclick="buildPolSim()">↺ リセット</button>
+    </div>
+    <button class="btn-s" style="margin-top:8px" onclick="setStage('s2')">原理を知る →</button>
+  `;
+  polMonomers=0;
+  const msg=document.getElementById('pol-msg');
+  msg.textContent='＋ ボタンを押してモノマー（CH₂=CH₂）を繋げてみよう。これがポリエチレンの合成！';
+  msg.classList.add('show');
+  drawPol();
+  if(!ST.planets.polymer.s1){ST.planets.polymer.s1=true;addXP(20);}
+}
+
+let polMonomers=0;
+function addMonomer(){
+  polMonomers=Math.min(polMonomers+1,8);
+  drawPol();
+  const msg=document.getElementById('pol-msg');
+  msg.classList.add('show');
+  if(polMonomers<3) msg.textContent=`現在 n=${polMonomers}。まだオリゴマー。もっと繋げよう！`;
+  else if(polMonomers<6) msg.textContent=`n=${polMonomers}。鎖が伸びてきた！ n が大きいほど高分子と呼ばれる。`;
+  else msg.textContent=`🎉 n=${polMonomers}！ 高分子ポリエチレン（ポリ袋の材料）の完成！ 実際の n は数万〜数十万にもなる。`;
+  if(polMonomers>=4&&!ST.planets.polymer.s1){ST.planets.polymer.s1=true;addXP(20);}
+}
+
+function drawPol(){
+  const c=document.getElementById('c-pol'); if(!c)return;
+  c.innerHTML='';
+  const W=c.offsetWidth||320,H=190;
+  const n=Math.max(1,polMonomers);
+  const uw=Math.min(36,(W-20)/n);
+  for(let i=0;i<n;i++){
+    const x=10+i*(uw+4), y=H/2-18;
+    const box=document.createElement('div');
+    box.style.cssText=`position:absolute;width:${uw}px;height:36px;background:rgba(22,163,74,.2);border:1.5px solid rgba(22,163,74,.6);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:${uw>28?11:9}px;color:#4ade80;font-weight:600`;
+    box.style.left=x+'px'; box.style.top=y+'px';
+    box.textContent=uw>24?'–CH₂–':'C₂';
+    c.appendChild(box);
+    if(i<n-1){
+      const bond=document.createElement('div');
+      bond.style.cssText=`position:absolute;width:4px;height:3px;background:var(--teal);border-radius:1px`;
+      bond.style.left=(x+uw)+'px'; bond.style.top=(y+16)+'px';
+      c.appendChild(bond);
+    }
+  }
+  const lbl=mkel('div','',`position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--fog);white-space:nowrap`,`(–CH₂–)ₙ   n = ${n}`);
+  c.appendChild(lbl);
+  if(n>=2){
+    const brackets=['[','—'.repeat(Math.min(n,6)),'  ]ₙ'];
+    const br=mkel('div','',`position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:13px;color:var(--teal);font-weight:700`,'ポリエチレン');
+    c.appendChild(br);
+  }
+}
+
+function buildPolLearn(){
+  document.getElementById('pol-stage').innerHTML=`
+    ${expCard('🔗','付加重合と縮合重合','タップで詳細',
+      '付加重合：二重結合を持つモノマーが次々と付加して繋がる。例：ポリエチレン（PE）、ポリプロピレン（PP）<br>縮合重合：2種のモノマーが小分子（水など）を脱離しながら結合する。例：ナイロン、PET','var(--green)')}
+    ${expCard('🌿','天然高分子 vs 合成高分子','タップで詳細',
+      '天然高分子：デンプン（α-グルコース）、セルロース（β-グルコース）、タンパク質（アミノ酸）、DNA（ヌクレオチド）<br>合成高分子：PE, PP, PET, ナイロン66, ポリスチレン（PS）<br>モノマーの種類で性質が大きく変わる。','var(--green)')}
+    ${expCard('♻️','生分解性プラスチック','タップで詳細',
+      '通常の合成高分子は自然界で分解されにくい。生分解性プラスチック（ポリ乳酸など）は微生物が利用できる結合（エステル結合など）を持つため分解される。環境問題と化学の接点。','var(--green)')}
+    <div class="formula-box">
+      <div class="formula-big">n CH₂=CH₂ → (–CH₂–CH₂–)ₙ</div>
+      <div class="formula-sub">エチレン（モノマー）→ ポリエチレン（ポリマー）</div>
+    </div>
+    <button class="btn-p" onclick="completeLearn('polymer')">理解した！ 試す →</button>
+  `;
+  document.querySelectorAll('.exp-card').forEach(c=>{
+    c.onclick=()=>{
+      c.querySelector('.exp-body').classList.toggle('open');
+      if(!ST.planets.polymer.s2){ST.planets.polymer.s2=true;addXP(20);}
+    };
+  });
+}
+
+function buildPolQuiz(){
+  const qs=[
+    {q:'ポリエチレンのモノマーはどれ？',
+     opts:['プロピレン','エチレン（CH₂=CH₂）','グルコース','アミノ酸'],ans:1,
+     exp:'ポリエチレンはエチレン（CH₂=CH₂）が付加重合してできる。二重結合が次々と開いて長い鎖になる。'},
+    {q:'縮合重合の特徴は？',
+     opts:['二重結合が開いて繋がる','小分子（水など）が脱離しながら繋がる','モノマーが1種類','付加重合と同じ'],ans:1,
+     exp:'縮合重合では2種のモノマーが反応するとき、H₂OやHClなどの小分子が脱離する。ナイロンやPETがこれに当たる。'},
+    {q:'デンプンとセルロースは同じグルコースからできているのに性質が異なる理由は？',
+     opts:['グルコースの数が違うから','α-グルコースとβ-グルコースで結合の向きが異なるから','温度が違うから','分子量が同じだから'],ans:1,
+     exp:'デンプンはα-グルコース（結合：α-1,4グリコシド）、セルロースはβ-グルコース（β-1,4グリコシド）。この結合の向きの差が糊（デンプン）と木材・繊維（セルロース）の大きな性質の違いを生む。'},
+    {q:'高分子化合物の重合度（n）が大きいとどうなる？',
+     opts:['融点が下がる','分子量が大きくなり強度や粘度が高くなる傾向','液体になる','電気を通す'],ans:1,
+     exp:'重合度が大きいほど分子量が大きく、強度・粘度・耐熱性などが高まる傾向がある。実際の高分子では n は数千〜数十万に達する。'},
+  ];
+  document.getElementById('pol-stage').innerHTML=buildQuizHTML(qs,'polymer');
+  initQuiz('polymer',qs);
+}
+
+// ══════════════════════════════════════════
+// SHARED QUIZ ENGINE
+// ══════════════════════════════════════════
+const quizState={};
+function buildQuizHTML(qs,id){
+  return `
+    <div class="quiz-score" id="qs-${id}">0 / ${qs.length} 正解</div>
+    ${qs.map((q,i)=>`
+    <div class="quiz-card" id="qc-${id}-${i}">
+      <div class="quiz-q">Q${i+1}. ${q.q}</div>
+      <div class="quiz-opts">
+        ${q.opts.map((o,j)=>`<button class="opt" onclick="ansQ('${id}',${i},${j})">${o}</button>`).join('')}
+      </div>
+      <div class="quiz-exp" id="qe-${id}-${i}"></div>
+    </div>`).join('')}
+    <div id="qr-${id}" style="display:none"></div>
+  `;
+}
+
+function initQuiz(id,qs){ quizState[id]={qs,answered:[],correct:0}; }
+
+function ansQ(id,qi,ai){
+  const st=quizState[id]; if(!st||st.answered.includes(qi))return;
+  st.answered.push(qi);
+  const q=st.qs[qi];
+  const card=document.getElementById(`qc-${id}-${qi}`);
+  const opts=card.querySelectorAll('.opt');
+  opts.forEach((o,j)=>{
+    o.classList.add('disabled');
+    if(j===q.ans) o.classList.add('correct');
+    else if(j===ai&&ai!==q.ans) o.classList.add('wrong');
+  });
+  const exp=document.getElementById(`qe-${id}-${qi}`);
+  exp.textContent=q.exp; exp.classList.add('show');
+  if(ai===q.ans){ st.correct++; toast('正解！ 素晴らしい！'); }
+  else toast('惜しい！ 解説を読もう。');
+  document.getElementById(`qs-${id}`).textContent=`${st.correct} / ${st.qs.length} 正解`;
+  if(st.answered.length===st.qs.length){
+    setTimeout(()=>showQuizResult(id,st.correct,st.qs.length),700);
+  }
+}
+
+function showQuizResult(id,correct,total){
+  const stars=correct===total?3:correct>=total*.6?2:1;
+  const xpGain=correct===total?100:correct>=total*.6?60:30;
+  const titles=['','よく頑張りました！','すごい！','完璧！'];
+  document.getElementById(`qr-${id}`).style.display='block';
+  document.getElementById(`qr-${id}`).innerHTML=`
+    <div class="result">
+      <div class="result-icon">${correct===total?'🏆':'🎯'}</div>
+      <div class="result-title">${titles[stars]}</div>
+      <div class="result-sub">${correct}問 / ${total}問 正解</div>
+      <div class="stars-big">${'★'.repeat(stars)+'☆'.repeat(3-stars)}</div>
+      <div class="xp-num">+${xpGain} XP</div>
+      <div class="xp-lbl">獲得した経験値</div>
+      <button class="btn-p" onclick="completePlanet('${id}',${stars},${xpGain})">惑星マップへ戻る 🌌</button>
+      ${correct<total?`<button class="btn-s" onclick="retryQuiz('${id}')">もう一度挑戦 ↺</button>`:''}
+    </div>`;
+}
+
+function retryQuiz(id){
+  curStage='s3'; renderPlanet();
+}
+
+function completePlanet(id,stars,xp){
+  if(ST.planets[id].stars<stars) ST.planets[id].stars=stars;
+  ST.planets[id].s3=true;
+  addXP(xp);
+  checkScientistUnlock(id);
+  goMap();
+}
+
+function completeLearn(id){
+  if(!ST.planets[id].s2) ST.planets[id].s2=true;
+  addXP(20);
+  setStage('s3');
+  toast('知識カードを解放！ 試す ステージへ！',2500);
+}
+
+function checkScientistUnlock(planetId){
+  const unlocked=SCIENTISTS.filter(s=>s.planet===planetId);
+  if(unlocked.length>0){
+    setTimeout(()=>toast(`📖 発見者カード解放：${unlocked[0].name}`,2500),1000);
+  }
+}
+
+// ══════════════════════════════════════════
+// CODEX
+// ══════════════════════════════════════════
+function renderCodex(){
+  document.getElementById('codex-xp').textContent=ST.xp+' XP';
+  const el=document.getElementById('codex-content');
+  el.innerHTML=`
+    <div style="padding:16px 0 8px;font-size:13px;font-weight:600;color:var(--fog);letter-spacing:.5px">発見者たちの記録</div>
+    ${SCIENTISTS.map(s=>{
+      const planet=PLANETS.find(p=>p.id===s.planet);
+      const unlocked=ST.planets[s.planet]&&ST.planets[s.planet].stars>0;
+      return `<div class="codex-card ${unlocked?'':'locked'}">
+        <div class="codex-avatar">${unlocked?s.icon:'🔒'}</div>
+        <div>
+          <div class="codex-name">${unlocked?s.name:'???'}</div>
+          <div class="codex-year">${unlocked?s.year:'──'} ｜ ${planet?planet.name:''}をクリアで解放</div>
+          <div class="codex-desc">${unlocked?s.desc:'この科学者の記録を解放するには、対応する惑星をクリアしよう。'}</div>
+        </div>
+      </div>`;
+    }).join('')}
+    <div style="padding:12px 0;text-align:center;font-size:12px;color:var(--fog)">${SCIENTISTS.filter(s=>ST.planets[s.planet]&&ST.planets[s.planet].stars>0).length} / ${SCIENTISTS.length} 解放済み</div>
+  `;
+}
+
+// ══════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════
+function renderDash(){
+  document.getElementById('dash-xp').textContent=ST.xp+' XP';
+  const completed=PLANET_IDS.filter(id=>ST.planets[id].stars>0).length;
+  const totalStars=PLANET_IDS.reduce((s,id)=>s+ST.planets[id].stars,0);
+  const el=document.getElementById('dash-content');
+  el.innerHTML=`
+    <div style="padding:14px 0 10px;font-size:13px;font-weight:600;color:var(--fog);letter-spacing:.5px">学習サマリー</div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-num">${ST.xp}</div><div class="stat-lbl">総 XP</div></div>
+      <div class="stat-box"><div class="stat-num">${LEVELS[ST.level].title.split(' ')[0]}</div><div class="stat-lbl">レベル</div></div>
+      <div class="stat-box"><div class="stat-num">${completed}</div><div class="stat-lbl">クリア惑星</div></div>
+      <div class="stat-box"><div class="stat-num">${totalStars}</div><div class="stat-lbl">獲得★</div></div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:var(--fog);margin:4px 0 9px;letter-spacing:.5px">惑星別進捗</div>
+    ${PLANETS.map(p=>{
+      const st=ST.planets[p.id];
+      const pct=Math.round(((st.s1?1:0)+(st.s2?1:0)+(st.s3?1:0))/3*100);
+      const stars='★'.repeat(st.stars)+'☆'.repeat(3-st.stars);
+      return `<div class="dash-card">
+        <div class="dash-row">
+          <span class="dash-name">${p.orb} ${p.name}</span>
+          <span class="dash-xp" style="color:var(--star)">${stars}</span>
+        </div>
+        <div class="mini-bar"><div class="mini-fill" style="width:${pct}%"></div></div>
+        <div style="font-size:10px;color:var(--fog);text-align:right;margin-top:3px">${pct}% 完了</div>
+      </div>`;
+    }).join('')}
+    <div style="margin-top:14px;font-size:12px;color:var(--fog);text-align:center">
+      全ての惑星をクリアして「結合の神」を目指せ！
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════
+function mkAtom(cls,label,x,y){
+  const el=document.createElement('div');
+  el.className=`atom atom-${cls}`;
+  el.style.left=x+'px'; el.style.top=y+'px';
+  el.textContent=label;
+  return el;
+}
+function mkElec(x,y){
+  const el=document.createElement('div');
+  el.className='elec';
+  el.style.left=x+'px'; el.style.top=y+'px';
+  return el;
+}
+function mkel(tag,cls,style,text){
+  const el=document.createElement(tag);
+  if(cls) el.className=cls;
+  if(style) el.style.cssText=style;
+  if(text) el.textContent=text;
+  return el;
+}
+function atomDist(a,b,aw,bw){
+  const ax=parseFloat(a.style.left)+aw, ay=parseFloat(a.style.top)+aw;
+  const bx=parseFloat(b.style.left)+bw, by=parseFloat(b.style.top)+bw;
+  return Math.hypot(ax-bx,ay-by);
+}
+function drawBond(container,x1,y1,x2,y2,cls){
+  const dx=x2-x1, dy=y2-y1;
+  const len=Math.hypot(dx,dy);
+  const ang=Math.atan2(dy,dx)*180/Math.PI;
+  const bond=document.createElement('div');
+  bond.className='bond'+(cls?' '+cls:'');
+  bond.style.left=x1+'px'; bond.style.top=y1+'px';
+  bond.style.width=len+'px';
+  bond.style.transform=`rotate(${ang}deg)`;
+  container.appendChild(bond);
+  return bond;
+}
+function expCard(icon,title,hint,body,borderColor){
+  return `<div class="exp-card" style="border-left-color:${borderColor||'var(--purple)'}">
+    <div class="exp-head">
+      <div class="exp-icon" style="background:${(borderColor||'#8b7cf8')}22">${icon}</div>
+      <div><div class="exp-title">${title}</div><div class="exp-hint">${hint}</div></div>
+    </div>
+    <div class="exp-body">${body}</div>
+  </div>`;
+}
+function var_(name){ return getComputedStyle(document.documentElement).getPropertyValue('--'+name).trim()||'#ffc843'; }
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+updateLvUI();
+renderMap();
+</script>
+</body>
+</html>
